@@ -89,19 +89,47 @@ class Welcome extends CI_Controller {
 
 	}
 
-	public function getBtcIdrTicker(){
+	public function getTickerFromDb(){
+
+		$pairs = $this->input->get('pairs');
+
+		if(!$pairs){
+			echo 'please select pairs';
+			exit();
+		}
 
 		$mongo_db = new Mongo_db();
 		$mongo_db->connect();
 
-		$client = new Client();
-		$response = $client->request('GET', 'https://indodax.com/api/ticker/btcidr');
-		$data = json_decode($response->getBody()->getContents());
-		$data->ticker->pairs = 'btcidr';
-		$mongo_db->insert('ticker', (array)$data->ticker);
-
 		echo "<pre>";
-		print_r($mongo_db->get('ticker'));
+		echo json_encode($this->mongo_db->select(['pairs','last'])->where('pairs', $pairs)->get('ticker'));
+
+	}
+
+	public function getCryptoTicker(){
+
+		$mongo_db = new Mongo_db();
+		$mongo_db->connect();
+
+		$pairs = [
+			'btcidr',
+			'ethidr',
+			'xrpidr',
+			'bnbidr',
+			'dogeidr',
+			'ltcidr'
+		];
+
+		foreach ($pairs as $p){
+			$client = new Client();
+			$response = $client->request('GET', 'https://indodax.com/api/ticker/btcidr');
+			$data = json_decode($response->getBody()->getContents());
+			$data->ticker->pairs = $p;
+			$mongo_db->insert('ticker', (array)$data->ticker);
+
+			echo "<pre>";
+			print_r($data);
+		}
 
 	}
 }
